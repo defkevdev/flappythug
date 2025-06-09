@@ -147,23 +147,21 @@ useEffect(() => {
   let timeoutId;
 
   function spawnDiamond() {
-    // ใช้ pipes จาก state ล่าสุด
     setDiamonds((old) => {
-      let targetPipeIndex = -1;
       let maxX = -Infinity;
-      pipes.forEach((pipe, idx) => {
+      let targetPipe = null;
+      pipes.forEach((pipe) => {
         if (pipe.x > maxX) {
           maxX = pipe.x;
-          targetPipeIndex = idx;
+          targetPipe = pipe;
         }
       });
-      if (targetPipeIndex !== -1) {
-        const pipe = pipes[targetPipeIndex];
+      if (targetPipe) {
         return [
           ...old,
           {
-            x: pipe.x + PIPE_WIDTH / 2,
-            y: pipe.y + PIPE_GAP / 2,
+            x: targetPipe.x + PIPE_WIDTH / 2,
+            y: targetPipe.y + PIPE_GAP / 2,
             id: Math.random().toString(36).slice(2),
           },
         ];
@@ -783,7 +781,6 @@ useEffect(() => {
 function Enemy({ x, y, type }) {
   const size = ENEMY_SIZE;
   let path;
-  let color;
   switch (type) {
     case 'star':
       path = (
@@ -797,7 +794,6 @@ function Enemy({ x, y, type }) {
           <use href="#star" x="0" y="0" fill="#ff0" />
         </g>
       );
-      color = '#ff0';
       break;
     case 'triangle':
       path = (
@@ -808,7 +804,6 @@ function Enemy({ x, y, type }) {
           strokeWidth="2"
         />
       );
-      color = '#0ff';
       break;
     case 'square':
     default:
@@ -823,7 +818,6 @@ function Enemy({ x, y, type }) {
           strokeWidth="2"
         />
       );
-      color = '#f00';
       break;
   }
 
