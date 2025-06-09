@@ -122,7 +122,7 @@ function App() {
   const [pipes, setPipes] = useState([{ x: GAME_WIDTH, y: getRandomPipeY() }]);
   const [score, setScore] = useState(5);
   const [gameOver, setGameOver] = useState(false);
-  const [highScore, setHighScore] = useState(
+  const [highScore] = useState(
     () => Number(localStorage.getItem('flappyThugHighScore')) || 0
   );
 
@@ -174,10 +174,9 @@ useEffect(() => {
   timeoutId = setTimeout(spawnDiamond, Math.random() * 5000 + 5000);
 
   return () => clearTimeout(timeoutId);
-}, [gameOver, showIntro]);
+}, [gameOver, showIntro, pipes]); // เพิ่ม pipes
 
   const [diamondEffect, setDiamondEffect] = useState(null);
-  const [diamondCount, setDiamondCount] = useState(0);
 
   // ผลของการโดนกระสุนศัตรู
   const [enemyHitEffect, setEnemyHitEffect] = useState(null); // <--- เพิ่ม
@@ -358,7 +357,6 @@ useEffect(() => {
       if (hit) {
         setScore((s) => s + 20);
         setDiamondEffect({ x: hit.x, y: hit.y, ts: Date.now() });
-        setDiamondCount((c) => c + 1);
       }
       return newDiamonds;
     });
@@ -746,6 +744,31 @@ useEffect(() => {
         )}
       </div>
 
+      {/* วิธีเล่นและปุ่มควบคุม */}
+      <div
+        style={{
+          width: GAME_WIDTH,
+          margin: '16px auto 0 auto',
+          background: '#181818',
+          color: '#fff',
+          borderRadius: 12,
+          padding: '18px 24px 14px 24px',
+          fontSize: 18,
+          boxShadow: '0 2px 12px #0007',
+          textAlign: 'left',
+          lineHeight: 1.7,
+          border: '2px solid #333',
+          maxWidth: '95vw',
+        }}
+      >
+        <b>วิธีเล่น:</b><br />
+        - กด <b>Space</b> เพื่อกระโดด<br />
+        - คลิกเมาส์เพื่อยิงศัตรู<br />
+        - เล็งด้วยเมาส์ (เส้นสีฟ้า)<br />
+        - เก็บเพชรเพื่อคะแนนพิเศษ<br />
+        - ถ้าตาย กด <b>Space</b> หรือคลิกที่หน้าจอเพื่อเริ่มใหม่<br />
+      </div>
+
       {/* ปุ่ม Buy me a coffee / donation */}
       {!showIntro && (
         <button
@@ -775,73 +798,6 @@ useEffect(() => {
         </button>
       )}
     </>
-  );
-}
-
-function Enemy({ x, y, type }) {
-  const size = ENEMY_SIZE;
-  let path;
-  switch (type) {
-    case 'star':
-      path = (
-        <g transform={`translate(${size / 2}, ${size / 2})`}>
-          <polygon
-            points={`0,-${size / 2} ${size / 6},${size / 6} -${size / 6},${size / 6}`}
-            fill="none"
-            stroke="#ff0"
-            strokeWidth="2"
-          />
-          <use href="#star" x="0" y="0" fill="#ff0" />
-        </g>
-      );
-      break;
-    case 'triangle':
-      path = (
-        <polygon
-          points={`0,${size / 2} ${size / 2},-${size / 2} -${size / 2},-${size / 2}`}
-          fill="none"
-          stroke="#0ff"
-          strokeWidth="2"
-        />
-      );
-      break;
-    case 'square':
-    default:
-      path = (
-        <rect
-          x={-size / 2}
-          y={-size / 2}
-          width={size}
-          height={size}
-          fill="none"
-          stroke="#f00"
-          strokeWidth="2"
-        />
-      );
-      break;
-  }
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: x,
-        top: y,
-        width: size,
-        height: size,
-        // background: color,
-        clipPath: type === 'triangle' ? 'none' : 'inset(0% 0% 0% 0%)',
-        zIndex: 1,
-      }}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox={`-${size / 2} -${size / 2} ${size} ${size}`}
-        style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
-      >
-        {path}
-      </svg>
-    </div>
   );
 }
 
