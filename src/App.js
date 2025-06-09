@@ -122,7 +122,7 @@ function App() {
   const [pipes, setPipes] = useState([{ x: GAME_WIDTH, y: getRandomPipeY() }]);
   const [score, setScore] = useState(5);
   const [gameOver, setGameOver] = useState(false);
-  const [highScore] = useState(
+  const [highScore, setHighScore] = useState(
     () => Number(localStorage.getItem('flappyThugHighScore')) || 0
   );
 
@@ -412,6 +412,14 @@ useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameOver]);
+
+  // เพิ่ม useEffect นี้ไว้ใต้ useState ต่างๆ
+useEffect(() => {
+  if (score > highScore) {
+    setHighScore(score);
+    localStorage.setItem('flappyThugHighScore', score);
+  }
+}, [score, highScore]);
 
   // ห้ามมี useState/useEffect หลังบรรทัดนี้
   if (showIntro) {
