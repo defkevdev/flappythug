@@ -146,34 +146,34 @@ useEffect(() => {
   if (gameOver || showIntro) return;
   let timeoutId;
 
-  function spawnDiamond() {
-    setDiamonds((old) => {
-      let maxX = -Infinity;
-      let targetPipe = null;
-      pipes.forEach((pipe) => {
-        if (pipe.x > maxX) {
-          maxX = pipe.x;
-          targetPipe = pipe;
-        }
-      });
-      if (targetPipe) {
-        return [
-          ...old,
-          {
-            x: targetPipe.x + PIPE_WIDTH / 2,
-            y: targetPipe.y + PIPE_GAP / 2,
-            id: Math.random().toString(36).slice(2),
-          },
-        ];
-      }
-      return old;
-    });
-    timeoutId = setTimeout(spawnDiamond, Math.random() * 5000 + 5000);
-  }
+  // function spawnDiamond() {
+  //   setDiamonds((old) => {
+  //     let maxX = -Infinity;
+  //     let targetPipe = null;
+  //     pipes.forEach((pipe) => {
+  //       if (pipe.x > maxX && pipe.x < GAME_WIDTH - PIPE_WIDTH) {
+  //         maxX = pipe.x;
+  //         targetPipe = pipe;
+  //       }
+  //     });
+  //     if (targetPipe) {
+  //       return [
+  //         ...old,
+  //         {
+  //           x: targetPipe.x + PIPE_WIDTH / 2,
+  //           y: targetPipe.y + PIPE_GAP / 2,
+  //           id: Math.random().toString(36).slice(2),
+  //         },
+  //       ];
+  //     }
+  //     return old;
+  //   });
+  //   timeoutId = setTimeout(spawnDiamond, Math.random() * 5000 + 5000);
+  // }
 
-  timeoutId = setTimeout(spawnDiamond, Math.random() * 5000 + 5000);
+  // timeoutId = setTimeout(spawnDiamond, Math.random() * 5000 + 5000);
 
-  return () => clearTimeout(timeoutId);
+  // return () => clearTimeout(timeoutId);
 }, [gameOver, showIntro, pipes]); // เพิ่ม pipes
 
   const [diamondEffect, setDiamondEffect] = useState(null);
@@ -202,33 +202,38 @@ useEffect(() => {
   }, [velocity, gameOver]);
 
   // Pipes movement
-  useEffect(() => {
-    if (gameOver) return;
-    const interval = setInterval(() => {
-      setPipes((oldPipes) => {
-        let newPipes = oldPipes
-          .map((pipe) => ({ ...pipe, x: pipe.x - PIPE_SPEED }))
-          .filter((pipe) => pipe.x + PIPE_WIDTH > 0);
+useEffect(() => {
+  if (gameOver) return;
+  const interval = setInterval(() => {
+    setPipes((oldPipes) => {
+      let newPipes = oldPipes
+        .map((pipe) => ({ ...pipe, x: pipe.x - PIPE_SPEED }))
+        .filter((pipe) => pipe.x + PIPE_WIDTH > 0);
 
-        if (newPipes.length === 0 || newPipes[newPipes.length - 1].x < GAME_WIDTH - 200) {
-          newPipes.push({ x: GAME_WIDTH, y: getRandomPipeY() });
-        }
-        return newPipes;
-      });
-    }, 24);
-    return () => clearInterval(interval);
-  }, [gameOver]);
+      // เพิ่ม pipe ใหม่เมื่อถึงระยะที่กำหนด
+      if (newPipes.length === 0 || newPipes[newPipes.length - 1].x < GAME_WIDTH - 200) {
+        const newY = getRandomPipeY();
+        newPipes.push({ x: GAME_WIDTH, y: newY });
+      }
+
+
+
+      return newPipes;
+    });
+  }, 24);
+  return () => clearInterval(interval);
+}, [gameOver]);
 
   // Enemy spawn & movement
   useEffect(() => {
     if (gameOver) return;
-    // ปรับความยากเมื่อคะแนนเกิน 200
-    const isHard = score >= 200;
+    // ปรับความยากเมื่อคะแนนเกิน 500
+    const isHard = score >= 500; // <-- เปลี่ยนจาก 200 เป็น 500
     const maxEnemies = isHard
-      ? Math.min(4 + Math.floor((score - 200) / 25), 6) // สูงสุด 6 ตัว
-      : Math.min(1 + Math.floor(score / 20), 4);        // สูงสุด 4 ตัว
+      ? Math.min(4 + Math.floor((score - 500) / 25), 6) // <-- 500
+      : Math.min(1 + Math.floor(score / 20), 4);
     const baseInterval = isHard
-      ? Math.max(500 - (score - 200) * 2, 90)           // ถี่ขึ้น
+      ? Math.max(500 - (score - 500) * 2, 90)           // <-- 500
       : Math.max(900 - score * 5, 220);
 
     const spawnInterval = setInterval(() => {
@@ -251,7 +256,7 @@ useEffect(() => {
   // Enemy movement
   useEffect(() => {
     if (gameOver) return;
-    const isHard = score >= 200;
+    const isHard = score >= 500; // <-- เปลี่ยนจาก 200 เป็น 500
     const speedUp = isHard ? 1.2 : 1;
     const interval = setInterval(() => {
       setEnemies((old) =>
@@ -306,7 +311,7 @@ useEffect(() => {
       }
       // Score
       if (pipe.x + PIPE_WIDTH === 40) {
-        setScore((s) => s + 2); // ได้ 2 คะแนนเมื่อผ่านท่อ
+        setScore((s) => s + 1); // ได้ 1 คะแนนเมื่อผ่านท่อ
       }
     });
   }, [pipes, birdY, gameOver]);
@@ -340,7 +345,46 @@ useEffect(() => {
     );
   }, [bullets, enemies, birdY, gameOver]);
 
-  // ตรวจจับชนเพชร
+  // 1. ลบ trySpawnDiamond และ useEffect diamond เดิมออก
+
+  // 2. เพิ่ม useEffect สำหรับ spawn diamond (เหมือน enemy)
+useEffect(() => {
+  if (gameOver || showIntro) return;
+  // diamond จะ spawn ทุก 5-10 วินาที
+  const interval = setInterval(() => {
+    setDiamonds((old) => {
+      // spawn diamond ได้สูงสุด 1 เม็ดในจอ
+      if (old.length > 0) return old;
+      return [
+        ...old,
+        {
+          x: GAME_WIDTH + 36,
+          y: getRandomEnemyY(), // ใช้ฟังก์ชันเดียวกับ enemy
+          id: Math.random().toString(36).slice(2),
+        },
+      ];
+    });
+  }, Math.random() * 5000 + 5000); // 5-10 วินาที
+  return () => clearInterval(interval);
+}, [gameOver, showIntro]);
+
+  // 3. เพิ่ม useEffect สำหรับ movement diamond (เหมือน enemy)
+  useEffect(() => {
+    if (gameOver) return;
+    const interval = setInterval(() => {
+      setDiamonds((old) =>
+        old
+          .map((d) => ({
+            ...d,
+            x: d.x - (3.5 + score * 0.02), // ความเร็วเดียวกับ enemy
+          }))
+          .filter((d) => d.x + 36 > 0) // diamond หลุดจอซ้ายให้หายไป
+      );
+    }, 24);
+    return () => clearInterval(interval);
+  }, [gameOver, score]);
+
+  // 4. Collision bird vs diamond (ใช้ของเดิมได้เลย)
   useEffect(() => {
     if (gameOver || showIntro) return;
     setDiamonds((old) => {
@@ -355,7 +399,7 @@ useEffect(() => {
         return true;
       });
       if (hit) {
-        setScore((s) => s + 20);
+        setScore((s) => s + 30); // ได้ 30 คะแนน
         setDiamondEffect({ x: hit.x, y: hit.y, ts: Date.now() });
       }
       return newDiamonds;
@@ -757,24 +801,22 @@ useEffect(() => {
         style={{
           width: GAME_WIDTH,
           margin: '16px auto 0 auto',
-          background: '#181818',
+          background: 'transparent',
           color: '#fff',
-          borderRadius: 12,
-          padding: '18px 24px 14px 24px',
-          fontSize: 18,
-          boxShadow: '0 2px 12px #0007',
-          textAlign: 'left',
+          borderRadius: 8,
+          padding: '0 0 10px 0',
+          fontSize: 17,
+          textAlign: 'center',
           lineHeight: 1.7,
-          border: '2px solid #333',
+          letterSpacing: 0.5,
           maxWidth: '95vw',
+          border: 'none',
+          boxShadow: 'none',
         }}
       >
-        <b>วิธีเล่น:</b><br />
-        - กด <b>Space</b> เพื่อกระโดด<br />
-        - คลิกเมาส์เพื่อยิงศัตรู<br />
-        - เล็งด้วยเมาส์ (เส้นสีฟ้า)<br />
-        - เก็บเพชรเพื่อคะแนนพิเศษ<br />
-        - ถ้าตาย กด <b>Space</b> หรือคลิกที่หน้าจอเพื่อเริ่มใหม่<br />
+        <span style={{ color: '#aaa' }}>
+          Jump: <b>Space</b> &nbsp;|&nbsp; Shoot: <b>Mouse Click</b> &nbsp;|&nbsp; Aim: <b>Mouse</b> &nbsp;|&nbsp; Collect: <b>Diamond</b>
+        </span>
       </div>
 
       {/* ปุ่ม Buy me a coffee / donation */}
@@ -810,3 +852,5 @@ useEffect(() => {
 }
 
 export default App;
+
+
