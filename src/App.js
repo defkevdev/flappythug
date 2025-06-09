@@ -144,7 +144,6 @@ function App() {
 // วาง useEffect นี้ตรงนี้!
 useEffect(() => {
   if (gameOver || showIntro) return;
-  let timeoutId;
 
   // function spawnDiamond() {
   //   setDiamonds((old) => {
